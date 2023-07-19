@@ -1,3 +1,7 @@
+import java.security.DigestInputStream
+import java.security.MessageDigest
+import java.util.regex.Pattern
+
 plugins {
     id "com.android.application"
 }
@@ -15,7 +19,10 @@ ext {
 android {
     namespace "com.termux"
 
-    compileSdkVersion project.properties.compileSdkVersion.toInteger()
+//    compileSdkVersion project.properties.compileSdkVersion.toInteger()
+    defaultConfig {
+        compileSdk project.properties.compileSdkVersion.toInteger()
+    }
     ndkVersion = System.getenv("JITPACK_NDK_VERSION") ?: project.properties.ndkVersion
     def appVersionName = System.getenv("TERMUX_APP_VERSION_NAME") ?: ""
     def apkVersionTag = System.getenv("TERMUX_APK_VERSION_TAG") ?: ""
@@ -23,13 +30,13 @@ android {
     def splitAPKsForReleaseBuilds = System.getenv("TERMUX_SPLIT_APKS_FOR_RELEASE_BUILDS") ?: "0" // F-Droid does not support split APKs #1904
 
     dependencies {
-        implementation "androidx.annotation:annotation:1.3.0"
-        implementation "androidx.core:core:1.6.0"
-        implementation "androidx.drawerlayout:drawerlayout:1.1.1"
-        implementation "androidx.preference:preference:1.1.1"
+        implementation "androidx.annotation:annotation:1.6.0"
+        implementation "androidx.core:core:1.10.1"
+        implementation "androidx.drawerlayout:drawerlayout:1.2.0"
+        implementation "androidx.preference:preference:1.2.0"
         implementation "androidx.viewpager:viewpager:1.0.0"
-        implementation "com.google.android.material:material:1.4.0"
-        implementation "com.google.guava:guava:24.1-jre"
+        implementation "com.google.android.material:material:1.9.0"
+        implementation "com.google.guava:guava:31.1-jre"
         implementation "io.noties.markwon:core:$markwonVersion"
         implementation "io.noties.markwon:ext-strikethrough:$markwonVersion"
         implementation "io.noties.markwon:linkify:$markwonVersion"
@@ -145,24 +152,24 @@ android {
 dependencies {
     testImplementation "junit:junit:4.13.2"
     testImplementation "org.robolectric:robolectric:4.10"
-    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:1.1.5"
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.3"
 }
 
-task versionName {
+tasks.register('versionName') {
     doLast {
         print android.defaultConfig.versionName
     }
 }
 
-def validateVersionName(String versionName) {
+static def validateVersionName(String versionName) {
     // https://semver.org/spec/v2.0.0.html#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
     // ^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$
-    if (!java.util.regex.Pattern.matches("^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?\$", versionName))
+    if (!Pattern.matches("^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?\$", versionName))
         throw new GradleException("The versionName '"  + versionName + "' is not a valid version as per semantic version '2.0.0' spec in the format 'major.minor.patch(-prerelease)(+buildmetadata)'. https://semver.org/spec/v2.0.0.html.")
 }
 
 def downloadBootstrap(String arch, String expectedChecksum, String version) {
-    def digest = java.security.MessageDigest.getInstance("SHA-256")
+    def digest = MessageDigest.getInstance("SHA-256")
 
     def localUrl = "src/main/cpp/bootstrap-" + arch + ".zip"
     def file = new File(projectDir, localUrl)
@@ -192,7 +199,7 @@ def downloadBootstrap(String arch, String expectedChecksum, String version) {
 
     def connection = new URL(remoteUrl).openConnection()
     connection.setInstanceFollowRedirects(true)
-    def digestStream = new java.security.DigestInputStream(connection.inputStream, digest)
+    def digestStream = new DigestInputStream(connection.inputStream, digest)
     out << digestStream
     out.close()
 
@@ -212,7 +219,7 @@ clean {
     }
 }
 
-task downloadBootstraps() {
+tasks.register('downloadBootstraps') {
     doLast {
         def packageVariant = project.ext.packageVariant
         if (packageVariant == "apt-android-7") {

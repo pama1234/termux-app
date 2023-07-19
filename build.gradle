@@ -4,7 +4,7 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.2.0-alpha07'
+        classpath 'com.android.tools.build:gradle:8.2.0-alpha09'
     }
 }
 
@@ -16,6 +16,6 @@ allprojects {
     }
 }
 
-task clean(type: Delete) {
+tasks.register('clean', Delete) {
     delete rootProject.buildDir
 }

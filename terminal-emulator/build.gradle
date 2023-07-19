@@ -2,9 +2,12 @@ apply plugin: 'com.android.library'
 apply plugin: 'maven-publish'
 
 android {
-    namespace "com.termux"
+    namespace "com.termux.terminal"
 
-    compileSdkVersion project.properties.compileSdkVersion.toInteger()
+//    compileSdkVersion project.properties.compileSdkVersion.toInteger()
+    defaultConfig {
+        compileSdk project.properties.compileSdkVersion.toInteger()
+    }
     ndkVersion = System.getenv("JITPACK_NDK_VERSION") ?: project.properties.ndkVersion
 
     defaultConfig {
@@ -45,18 +48,18 @@ android {
     }
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
     testLogging {
         events "started", "passed", "skipped", "failed"
     }
 }
 
 dependencies {
-    implementation "androidx.annotation:annotation:1.3.0"
+    implementation "androidx.annotation:annotation:1.6.0"
     testImplementation "junit:junit:4.13.2"
 }
 
-task sourceJar(type: Jar) {
+tasks.register('sourceJar', Jar) {
     from android.sourceSets.main.java.srcDirs
     archiveClassifier.set("sources")
 }
